@@ -12,5 +12,5 @@
 /.idea/**/dynamic.xml
 /.idea/**/uiDesigner.xml
 
-# others
-ng2-admin-master.zip
+# python
+**/__pycache__/
