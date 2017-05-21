@@ -1,3 +1,3 @@
 # bot-platform
 
-`sudo pip install --upgrade google-api-python-client`
+`sudo pip install --upgrade google-api-python-client pytz`

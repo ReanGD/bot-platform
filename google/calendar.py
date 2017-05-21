@@ -1,4 +1,5 @@
 import os
+import pytz
 import httplib2
 import datetime
 import argparse
@@ -20,7 +21,7 @@ class GoogleCalendar(object):
         self._client_secret_file = os.path.join(cred_dir, 'google-client-secret.json')
         self._credential_file = os.path.join(cred_dir, 'goole-credential.json')
         self._service = None
-        self._time_zone = 'Europe/Moscow'
+        self._time_zone = pytz.timezone('Europe/Moscow')
 
     def _get_credentials(self):
         store = Storage(self._credential_file)
@@ -35,7 +36,7 @@ class GoogleCalendar(object):
 
     def _get_primary_calendar_timezone(self):
         calendar = self._service.calendars().get(calendarId='primary').execute()
-        return calendar['timeZone']
+        return pytz.timezone(calendar['timeZone'])
 
     def create(self):
         credentials = self._get_credentials()
@@ -43,13 +44,33 @@ class GoogleCalendar(object):
         self._service = discovery.build('calendar', 'v3', http=http)
         self._time_zone = self._get_primary_calendar_timezone()
 
+    def add_single_event(self, summary, description, start_data_time):
+        start_data_time_str = self._time_zone.localize(start_data_time).isoformat()
+        time_zone = self._time_zone.zone
+
+        event = {
+            'summary': summary,
+            'location': '',
+            'description': description,
+            'start': {
+                'dateTime': start_data_time_str,
+                'timeZone': time_zone,
+            },
+            'end': {
+                'dateTime': start_data_time_str,
+                'timeZone': time_zone,
+            },
+        }
+
+        self._service.events().insert(calendarId='primary', body=event).execute()
+
     def get_events(self):
         now = datetime.datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
         print('Getting the upcoming 10 events')
-        eventsResult = self._service.events().list(
+        events_result = self._service.events().list(
             calendarId='primary', timeMin=now, maxResults=10, singleEvents=True,
             orderBy='startTime').execute()
-        events = eventsResult.get('items', [])
+        events = events_result.get('items', [])
 
         if not events:
             print('No upcoming events found.')
