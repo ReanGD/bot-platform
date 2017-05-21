@@ -19,6 +19,8 @@ class GoogleCalendar(object):
 
         self._client_secret_file = os.path.join(cred_dir, 'google-client-secret.json')
         self._credential_file = os.path.join(cred_dir, 'goole-credential.json')
+        self._service = None
+        self._time_zone = 'Europe/Moscow'
 
     def _get_credentials(self):
         store = Storage(self._credential_file)
@@ -31,10 +33,15 @@ class GoogleCalendar(object):
             print('Storing credentials to ' + self._credential_file)
         return credentials
 
+    def _get_primary_calendar_timezone(self):
+        calendar = self._service.calendars().get(calendarId='primary').execute()
+        return calendar['timeZone']
+
     def create(self):
         credentials = self._get_credentials()
         http = credentials.authorize(httplib2.Http())
         self._service = discovery.build('calendar', 'v3', http=http)
+        self._time_zone = self._get_primary_calendar_timezone()
 
     def get_events(self):
         now = datetime.datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
