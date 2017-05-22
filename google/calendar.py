@@ -19,7 +19,7 @@ class GoogleCalendar(object):
             os.makedirs(cred_dir)
 
         self._client_secret_file = os.path.join(cred_dir, 'google-client-secret.json')
-        self._credential_file = os.path.join(cred_dir, 'goole-credential.json')
+        self._credential_file = os.path.join(cred_dir, 'google-credential.json')
         self._service = None
         self._time_zone = pytz.timezone('Europe/Moscow')
 
