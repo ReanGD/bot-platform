@@ -3,6 +3,7 @@ import pytz
 import httplib2
 import datetime
 import argparse
+import dateutil.parser
 from apiclient import discovery
 from oauth2client import client
 from oauth2client import tools
@@ -64,17 +65,16 @@ class GoogleCalendar(object):
 
         self._service.events().insert(calendarId='primary', body=event).execute()
 
-    def get_events(self):
+    def get_events(self, max_results):
         now = datetime.datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
-        print('Getting the upcoming 10 events')
         events_result = self._service.events().list(
-            calendarId='primary', timeMin=now, maxResults=10, singleEvents=True,
+            calendarId='primary', timeMin=now, maxResults=max_results, singleEvents=True,
             orderBy='startTime').execute()
-        events = events_result.get('items', [])
 
-        if not events:
-            print('No upcoming events found.')
+        result = []
+        for event in events_result.get('items', []):
+            start_str = event['start'].get('dateTime', event['start'].get('date'))
+            start = dateutil.parser.parse(start_str)
+            result.append((start, event['summary']))
 
-        for event in events:
-            start = event['start'].get('dateTime', event['start'].get('date'))
-            print(start, event['summary'])
+        return result
