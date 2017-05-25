@@ -1,6 +1,4 @@
-import json
 import locale
-import datetime
 from parser.parser_apiai import Parser
 from bots.bot_telegram import Bot
 from google.calendar import GoogleCalendar
@@ -21,7 +19,10 @@ class Run(object):
 
     def handler(self, text):
         result = self.parser.parse(text)
-        return json.dumps(result, indent=2)
+        if result.success():
+            return result.intent_name
+        else:
+            return result.error_msg
 
     def create(self):
         locale.setlocale(locale.LC_ALL, ('RU', 'UTF8'))

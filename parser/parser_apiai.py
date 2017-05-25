@@ -4,6 +4,15 @@ import uuid
 import apiai
 
 
+class Result:
+    def __init__(self, error_msg, intent_name):
+        self.error_msg = error_msg
+        self.intent_name = intent_name
+
+    def success(self):
+        return self.error_msg == ''
+
+
 class Parser(object):
     def __init__(self):
         cred_dir = os.path.join(os.path.expanduser('~'), '.config', 'credentials')
@@ -19,9 +28,17 @@ class Parser(object):
         self._session_id = str(uuid.uuid1())
         self._lang = lang
 
-    def parse(self, text):
+    def parse(self, text) -> Result:
         request = self._ai.text_request()
         request.lang = self._lang
         request.session_id = self._session_id
         request.query = text
-        return json.loads(request.getresponse().read())
+        response = json.loads(request.getresponse().read())
+        if response['status']['code'] != 200:
+            return Result(response['status']['errorType'], '')
+
+        result = response['result']
+        if result['action'] == 'input.unknown':
+            return Result(result['fulfillment']['speech'], '')
+
+        return Result('', result['metadata']['intentName'])
