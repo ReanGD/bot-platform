@@ -1,6 +1,9 @@
+import os
+import json
 import locale
-from parser.parser_apiai import Parser
 from bots.bot_telegram import Bot
+from handler.handler import Handler
+from parser.parser_apiai import Parser
 from google.calendar import GoogleCalendar
 
 
@@ -9,6 +12,7 @@ class Run(object):
         self.cal = GoogleCalendar()
         self.bot = Bot()
         self.parser = Parser()
+        self.handler = Handler()
 
         # start_data_time = datetime.datetime(2017, 8, 14, hour=0, minute=30)
         # cal.add_single_event('Событие1', '', start_data_time)
@@ -17,18 +21,26 @@ class Run(object):
         events = [it[0].strftime("%d %B %H:%M") + ': ' + it[1] for it in self.cal.get_events(10)]
         return '/n'.join(events)
 
-    def handler(self, text):
-        result = self.parser.parse(text)
-        if result.success():
-            return result.intent_name
+    def text_handler(self, text):
+        error, result = self.parser.parse(text)
+        if error == '':
+            return self.handler.handle(result.intent_name, result.parameters)
         else:
-            return result.error_msg
+            return error
 
     def create(self):
         locale.setlocale(locale.LC_ALL, ('RU', 'UTF8'))
+
+        cred_dir = os.path.join(os.path.expanduser('~'), '.config', 'credentials')
+        if not os.path.exists(cred_dir):
+            os.makedirs(cred_dir)
+        config_file = os.path.join(cred_dir, 'bot.json')
+        config = json.load(open(config_file, 'r'))
+
         self.cal.create()
-        self.bot.create(self.handler)
-        self.parser.create('ru')
+        self.bot.create(config['telegram'], self.text_handler)
+        self.parser.create(config['apiai'])
+        self.handler.create(config['handler'])
 
         return self
 
