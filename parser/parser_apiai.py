@@ -20,12 +20,12 @@ class Parser(object):
         self._session_id = str(uuid.uuid1())
         self._lang = config['lang']
 
-    def parse(self, text) -> (str, Result):
+    def parse(self, text, time_zone) -> (str, Result):
         request = self._ai.text_request()
         request.lang = self._lang
         request.session_id = self._session_id
         request.query = text
-        request.time_zone = 'Europe/Moscow'
+        request.time_zone = time_zone
         response = json.loads(request.getresponse().read())
         if response['status']['code'] != 200:
             err = 'api.ai error: {}'.format(response['status']['errorType'])

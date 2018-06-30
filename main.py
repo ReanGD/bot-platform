@@ -13,6 +13,7 @@ class Run(object):
         self.bot = Bot()
         self.parser = Parser()
         self.handler = Handler()
+        self.time_zone = 'Europe/Moscow'
 
         # start_data_time = datetime.datetime(2017, 8, 14, hour=0, minute=30)
         # cal.add_single_event('Событие1', '', start_data_time)
@@ -22,9 +23,9 @@ class Run(object):
         return '/n'.join(events)
 
     def text_handler(self, text):
-        error, result = self.parser.parse(text)
+        error, result = self.parser.parse(text, self.time_zone)
         if error == '':
-            return self.handler.handle(result.intent_name, result.parameters)
+            return self.handler.handle(result.intent_name, result.parameters, self.time_zone)
         else:
             return error
 
